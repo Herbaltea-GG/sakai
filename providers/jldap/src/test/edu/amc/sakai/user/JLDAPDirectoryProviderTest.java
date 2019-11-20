@@ -21,14 +21,11 @@
 
 package edu.amc.sakai.user;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Stack;
-
 import org.jmock.Mock;
 import org.jmock.cglib.MockObjectTestCase;
 import org.jmock.core.Invocation;
 import org.jmock.core.Stub;
+
 import org.sakaiproject.user.api.UserEdit;
 
 import com.novell.ldap.LDAPConnection;
@@ -83,6 +80,7 @@ public class JLDAPDirectoryProviderTest extends MockObjectTestCase {
 		searchResults = (LDAPSearchResults) mockSearchResults.proxy();
 		mockEntry = mock(LDAPEntry.class);
 		entry = (LDAPEntry)mockEntry.proxy();
+		provider.setServerConfigurationService(new MockServerConfigurationService());
 		
 		mockConnManager.expects(once()).method("setConfig").with(same(provider));
 		mockConnManager.expects(once()).method("init");

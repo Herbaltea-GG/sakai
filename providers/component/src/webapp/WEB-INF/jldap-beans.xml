@@ -17,8 +17,8 @@
 			Caching is done centrally in the UserDirectoryService.callCache -->
 			
 		<property name="serverConfigurationService">
-            <ref bean="org.sakaiproject.component.api.ServerConfigurationService"/>
-        </property>
+			<ref bean="org.sakaiproject.component.api.ServerConfigurationService"/>
+		</property>
 		
 		<!-- Required. Host name or address of your LDAP server -->
 		<property name="ldapHost">
@@ -31,8 +31,8 @@
 		<property name="ldapPort">
 			<value>636</value>
 		</property>
-        <property name="autoBind"> <!-- plukasew -->
-		  <value>true</value>
+		<property name="autoBind"> <!-- plukasew -->
+			<value>true</value>
 		</property>
 
 		<!--  If secureConnection is true, a keystore location must be provided
@@ -54,9 +54,9 @@
 		<!-- property name="ldapUser">
 			<value>attr=value,attr=value,attr=value</value>
 		</property -->
-        <property name="basePath"> <!-- plukasew -->
-            <value>BASE PATH GOES HERE</value>
-        </property>		
+		<property name="basePath"> <!-- plukasew -->
+			<value>BASE PATH GOES HERE</value>
+		</property>
 
 		<!-- Optional. Password for ldapUser defined above -->
 		<!--  property name="ldapPassword">
