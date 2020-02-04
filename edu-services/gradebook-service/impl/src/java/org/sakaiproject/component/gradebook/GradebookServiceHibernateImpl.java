@@ -97,6 +97,8 @@ import org.springframework.orm.hibernate4.HibernateOptimisticLockingFailureExcep
 import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
+import org.sakaiproject.component.gradebook.owl.OwlGradebookServiceImpl;
+import org.sakaiproject.service.gradebook.shared.owl.OwlGradebookService;
 
 /**
  * A Hibernate implementation of GradebookService.
@@ -113,6 +115,23 @@ public class GradebookServiceHibernateImpl extends BaseHibernateManager implemen
 
 	@Getter @Setter
 	private RubricsService rubricsService;
+
+	// ----- Begin OWL modifications -----
+	private OwlGradebookService owl;
+
+	@Override
+	public OwlGradebookService owlDoNotCall()
+	{
+		if (owl == null)
+		{
+			owl = new OwlGradebookServiceImpl(authz.owl(), this);
+		}
+
+		return owl;
+	}
+	// ----- End OWL modifications -----
+
+
 	@Override
 	public boolean isAssignmentDefined(final String gradebookUid, final String assignmentName) {
 		if (!isUserAbleToViewAssignments(gradebookUid)) {
@@ -289,6 +308,7 @@ public class GradebookServiceHibernateImpl extends BaseHibernateManager implemen
     	assignmentDefinition.setUngraded(internalAssignment.getUngraded());
     	assignmentDefinition.setSortOrder(internalAssignment.getSortOrder());
     	assignmentDefinition.setCategorizedSortOrder(internalAssignment.getCategorizedSortOrder());
+		assignmentDefinition.setAnon(internalAssignment.getAnon()); // OWL
 
     	return assignmentDefinition;
     }
@@ -633,11 +653,13 @@ public class GradebookServiceHibernateImpl extends BaseHibernateManager implemen
 		if (assignmentDefinition.getCategoryId() != null) {
 			return createAssignmentForCategory(gradebook.getId(), assignmentDefinition.getCategoryId(), assignmentDefinition.getName(),
 					points, assignmentDefinition.getDueDate(), !assignmentDefinition.isCounted(), assignmentDefinition.isReleased(),
-					assignmentDefinition.isExtraCredit(), assignmentDefinition.getCategorizedSortOrder());
+					assignmentDefinition.isExtraCredit(), assignmentDefinition.getCategorizedSortOrder(),
+					assignmentDefinition.isAnon()); // OWL
 		}
 
 		return createAssignment(gradebook.getId(), assignmentDefinition.getName(), points, assignmentDefinition.getDueDate(),
-				!assignmentDefinition.isCounted(), assignmentDefinition.isReleased(), assignmentDefinition.isExtraCredit(), assignmentDefinition.getSortOrder());
+				!assignmentDefinition.isCounted(), assignmentDefinition.isReleased(), assignmentDefinition.isExtraCredit(), assignmentDefinition.getSortOrder(),
+				assignmentDefinition.isAnon()); // OWL
 	}
 
 	@SuppressWarnings({ "unchecked", "rawtypes" })
@@ -3253,11 +3275,12 @@ public class GradebookServiceHibernateImpl extends BaseHibernateManager implemen
 		}
 
 		final Map<String, Double> bottomPercents = gbInfo.getSelectedGradingScaleBottomPercents();
+		final List<String> unmappedGrades = gbInfo.getSelectedGradingScaleUnmappedGrades(); // OWL
 
 		// Before we do any work, check if any existing course grade overrides might be left in an unmappable state
 		final List<CourseGradeRecord> courseGradeOverrides = getHibernateTemplate().execute(session -> getCourseGradeOverrides(gradebook));
 		courseGradeOverrides.forEach(cgr -> {
-			if (!bottomPercents.containsKey(cgr.getEnteredGrade())) {
+			if (!bottomPercents.containsKey(cgr.getEnteredGrade()) && !unmappedGrades.contains(cgr.getEnteredGrade())) {
 				throw new UnmappableCourseGradeOverrideException(
 						"The grading schema could not be updated as it would leave some course grade overrides in an unmappable state.");
 			}
@@ -3500,6 +3523,7 @@ public class GradebookServiceHibernateImpl extends BaseHibernateManager implemen
 
 		for (final GradeMapping mapping : gradeMappings) {
 			rval.add(new GradeMappingDefinition(mapping.getId(), mapping.getName(),
+					mapping.getGrades(), // OWL mod, we have to pass the unmapped grades here or they will be lost
 					GradeMappingDefinition.sortGradeMapping(mapping.getGradeMap()),
 					GradeMappingDefinition.sortGradeMapping(mapping.getDefaultBottomPercents())));
 		}

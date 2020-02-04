@@ -77,7 +77,9 @@ import org.sakaiproject.gradebookng.business.model.GbGroup;
 import org.sakaiproject.gradebookng.business.model.GbStudentGradeInfo;
 import org.sakaiproject.gradebookng.business.model.GbStudentNameSortOrder;
 import org.sakaiproject.gradebookng.business.model.GbUser;
-import org.sakaiproject.gradebookng.business.util.CourseGradeFormatter;
+import org.sakaiproject.gradebookng.business.owl.OwlBusinessService;
+import org.sakaiproject.gradebookng.business.owl.OwlGbSiteType;
+import org.sakaiproject.gradebookng.business.owl.finalgrades.OwlCourseGradeFormatter;
 import org.sakaiproject.gradebookng.business.util.EventHelper;
 import org.sakaiproject.gradebookng.business.util.FormatHelper;
 import org.sakaiproject.gradebookng.business.util.GbStopWatch;
@@ -185,6 +187,20 @@ public class GradebookNgBusinessService {
 	public static final String ASSIGNMENT_ORDER_PROP = "gbng_assignment_order";
 	public static final String ICON_SAKAI = "icon-sakai--";
 	public static final String ALL = "all";
+
+	// ----- Begin OWL modifications -----
+	private OwlBusinessService owl;
+
+	public OwlBusinessService owl()
+	{
+		if (owl == null) // we have to load on demand because Wicket+Spring proxying seems to never call the init method
+		{
+			owl = new OwlBusinessService(this, gradebookService, courseManagementService, userDirectoryService, getCandidateDetailProvider());
+		}
+
+		return owl;
+	}
+	// ----- End OWL modifications -----
 
 	/**
 	 * Get a list of all users in the current site that can have grades
@@ -1186,7 +1202,7 @@ public class GradebookNgBusinessService {
 
 		// Setup the course grade formatter
 		// TODO we want the override except in certain cases. Can we hard code this?
-		final CourseGradeFormatter courseGradeFormatter = new CourseGradeFormatter(gradebook, role, isCourseGradeVisible, settings.getShowPoints(), true);
+		OwlCourseGradeFormatter courseGradeFormatter = new OwlCourseGradeFormatter(gradebook, role, isCourseGradeVisible, settings.getShowPoints());
 
 		for (final GbUser student : gbStudents) {
 			// Create and add the user info
@@ -2690,6 +2706,12 @@ public class GradebookNgBusinessService {
 		if (site == null || getCandidateDetailProvider() == null)
 		{
 			return "";
+		}
+
+		// OWL - if course site, work with revealed student numbers
+		if (OwlGbSiteType.COURSE == OwlGbSiteType.from(site))
+		{
+			return owl().getRevealedStudentNumber(u, site);
 		}
 
 		return getCandidateDetailProvider().getInstitutionalNumericId(u, site).orElse("");
