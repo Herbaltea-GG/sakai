@@ -336,11 +336,15 @@ public class ExportPanel extends BasePanel {
 				// build column header
 				assignments.forEach(assignment -> {
 					final String assignmentPoints = FormatHelper.formatGradeForDisplay(assignment.getPoints().toString());
+					String externalPrefix = "";
+					if (assignment.isExternallyMaintained()) {
+						externalPrefix = IGNORE_COLUMN_PREFIX;
+					}
 					if (!isCustomExport || this.includeGradeItemScores) {
-						header.add(assignment.getName() + " [" + StringUtils.removeEnd(assignmentPoints, formattedText.getDecimalSeparator() + "0") + "]");
+						header.add(externalPrefix + assignment.getName() + " [" + StringUtils.removeEnd(assignmentPoints, formattedText.getDecimalSeparator() + "0") + "]");
 					}
 					if (!isCustomExport || this.includeGradeItemComments) {
-						header.add(String.join(" ", COMMENTS_COLUMN_PREFIX, assignment.getName()));
+						header.add(String.join(" ", externalPrefix, COMMENTS_COLUMN_PREFIX, assignment.getName()));
 					}
 				});
 
