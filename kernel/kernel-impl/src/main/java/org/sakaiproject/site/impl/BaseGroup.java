@@ -321,7 +321,7 @@ public class BaseGroup implements Group, Identifiable
 	 * 
 	 * @return My azg.
 	 */
-	protected AuthzGroup getAzg()
+	public AuthzGroup getAzg()
 	{
 		if (m_azg == null)
 		{
